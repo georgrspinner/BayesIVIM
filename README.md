@@ -2,9 +2,7 @@
 Code for paper:
 
 Georg Ralph Spinner, ChristianFederau and Sebastian Kozerke.
-
 Bayesian inference using hierarchical and spatial priors for intravoxel incoherent motion MR imaging in the brain: Analysis of cancer and acute stroke.
-
 Medical Image Analysis (73), October 2021
 
 https://doi.org/10.1016/j.media.2021.102144
@@ -22,5 +20,5 @@ Non-essential dependencies:
 
 The code is developed by Georg Ralph Spinner (georg.spinner@zhaw.ch) at [Cardiac Magnetic Resonance group](http://www.cmr.ethz.ch/), Institute for Biomedical Engineering, ETH Zurich and University of Zurich
 
-![grafik](https://user-images.githubusercontent.com/72972409/162081594-2acc1dd5-7fbf-427b-ab28-74ea1eb60831.png)
+![grafik](https://user-images.githubusercontent.com/72972409/162081945-817ccb84-e1d5-4e06-8449-9e14085823d9.png)
 ![grafik](https://user-images.githubusercontent.com/72972409/162081219-26281bc8-53a3-4573-bad1-675fb4f9c41c.png)
