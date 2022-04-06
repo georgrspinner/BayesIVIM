@@ -10,6 +10,8 @@ https://doi.org/10.1016/j.media.2021.102144
 
 This repository contains realistic numerical brain MRI phantoms with pathological lesions (cancer, acute stroke), least-squares based IVIM fits and routines for Bayesian inference - including the proposed method.
 
+Try demo.m to test it.
+
 ![grafik](https://user-images.githubusercontent.com/72972409/162079761-82bfce23-e9a3-4318-b07d-6baff36c6565.png)
 
 
