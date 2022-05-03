@@ -18,7 +18,7 @@ Try demo.m to test it.
 Non-essential dependencies:
 - Numerical brain MRI phantom: http://bigwww.epfl.ch/algorithms/mriphantom/ (requires compilation), corresponding paper: https://doi.org/10.1109/TMI.2011.2174158; only necessary if numerical phantoms need to be re-created or modified
 - Python and packages: only necessary for deep-learning-based IVIMNET fits, which will be skipped if Matlab can not execute the Python calls correctly. Required packages are installed automatically. A Python script to perform IVIMNET (https://github.com/oliverchampion/IVIMNET, corresponding paper: https://doi.org/10.1002/mrm.28852) fits is included.
-- Image registration: pTVreg (https://github.com/visva89/pTVreg, corresponding paper: https://doi.org/10.1109/TMI.2016.2610583) is used for potential in-vivo data (not included), but other segmentation tools might work as well.
+- Image registration: pTVreg (https://github.com/visva89/pTVreg, corresponding paper: https://doi.org/10.1109/TMI.2016.2610583) is used for potential in-vivo data (not included), but other registration tools might work as well.
 
 The code is developed by Georg Ralph Spinner (georg.spinner@zhaw.ch) at [Cardiac Magnetic Resonance group](http://www.cmr.ethz.ch/), Institute for Biomedical Engineering, ETH Zurich and University of Zurich
 
