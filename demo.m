@@ -4,7 +4,7 @@ scenario='cancer'; %'stroke' %'in-vivo'
 %% Parameters
 %for simulation only
 if ~strcmp(scenario,'in-vivo')
-    snr=30; %[10:10:50,75:25:200];
+    snr=40; %[10:10:50,75:25:200];
     bval=[0,10,20,40,80,110,140,170,200,300,400,500,600,700,800,900];
 end
 %
@@ -34,6 +34,12 @@ parsIVIMNET.reps=1; %repetitions for IVIMNET
 parsIVIMNET.batch_size=128;
 parsIVIMNET.iter_max=1000;
 
+%% Prepare paths & functions
+addpath(genpath('code/'));
+addpath(genpath('data/'));
+% pathOutput='output/'; %output folder
+% mkdir(pathOutput);
+
 %% Generate/get data
 switch scenario
     case 'cancer' %in-silico
@@ -52,13 +58,7 @@ switch scenario
             error('Pre-processing of in-vivo data failed: check that pTVreg is added to Matlab path.');
         end
 end
-[nx,ny,nb]=size(data); %nb=numel(bval);
-
-%% Prepare paths & functions
-addpath(genpath('code/'));
-addpath(genpath('data/'));
-% pathOutput='output/'; %output folder
-% mkdir(pathOutput);
+[nx,ny,nz,nb,ng]=size(data); %nb=numel(bval);
 
 %% Prepare Python: for IVIMNET
 try
@@ -67,22 +67,34 @@ try
     if strcmp(pe.Version,"")
         disp('Python not found - please choose python folder');
         folderPython=uigetdir(matlabroot,'Python not found - please choose python folder');
-        pyversion(strcat(folderPython,'/python.exe')); %load chosen Python version
+        pe=pyenv(Version=folderPython); %load chosen Python version %pyversion(strcat(folderPython,'/python.exe')); 
     else
         %Python was found
     end
     %install required Python packages:  via command window (not Python terminal)
-    system('pip install numpy');
-    system('pip install matplotlib');
-    system('pip install torch');  %=Pytorch
-    system('pip install tqdm');
+    pip_str=strcat('pip',pe.Version,' install');
+    package_list={'numpy','matplotlib','torch','tqdm'};
+    for i=1:length(package_list)
+        system(strcat(pip_str," ",package_list{i})); %install packages for Python version used currently by Matlab
+    end
+    %Add Python script to Python path
+    python_path = py.sys.path;
+    script_path=strcat(pwd,'/code/ivimnet/');
+    if count(python_path,script_path) == 0
+        insert(python_path,int32(0),script_path);
+    end
+    %Check if Python script can be imported
+    py.importlib.import_module('ivimnet');
+    %Prevent Matlab licensing error when Python calls multiprocessing (https://ch.mathworks.com/matlabcentral/answers/386484-license-manager-error-1-when-call-python-module-which-includes-multiprocessing)
+    py.multiprocessing.spawn.set_executable(pe.Executable);    
     %Python successfully set-up
     pythonFlag=true;
+    disp('Python sucessfully set-up.');
     %reload Python script: only necessary after editing
-    %clear classes; m = py.importlib.import_module('IVIMNET'); py.importlib.reload(m);
+    %clear classes; m = py.importlib.import_module('ivimnet'); py.importlib.reload(m);
 catch
     pythonFlag=false;
-    warning('Could not set up Python via Matlab - IVIMNET fits will not be performed. Check also compatibility of Python and Matlab versions: https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/support/sysreq/files/python-compatibility.pdf');
+    disp('Could not set up Python via Matlab - IVIMNET fits will not be performed. Check also compatibility of Python and Matlab versions: https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/support/sysreq/files/python-compatibility.pdf')
 end
 
 %% Prepare plots
@@ -155,17 +167,23 @@ end
 timeAll(ifit)=t_lsq_segm;
 
 %% 3. IVIMNET
-%calling Python from Matlab - works only if everything is set-up
-%correctly...
 ifit=3;
+%Calling Python from Matlab - works only if everything is set-up
+%correctly.
+%Tested using Matlab R2022a, Python 3.8.10 and Windows 10.
+%Note that the b-values are hard-coded in ivimnet.py
 if pythonFlag
     try
-        %fit
+        %prepare
         N=sum(mask(:));
-        [nx,ny,nz,nb,ng]=size(data);
         dataVec=reshape(data(repmat(mask,[1,1,1,nb,ng])),[N,nb,ng]);
-        clear  DStar_IVIMNET_reps D_IVIMNET_reps f_IVIMNET_reps loss_IVIMNET;
-        for irep=1:parsIVIMNET.reps
+        DStar_IVIMNET_reps=zeros(nx,ny,parsIVIMNET.reps);
+        D_IVIMNET_reps=zeros(nx,ny,parsIVIMNET.reps);
+        f_IVIMNET_reps=zeros(nx,ny,parsIVIMNET.reps);
+        loss_IVIMNET_reps=zeros(parsIVIMNET.iter_max,parsIVIMNET.reps);
+        t_IVIMNET_reps=zeros(1,parsIVIMNET.reps);
+        %fit
+        for irep=1:parsIVIMNET.reps %fit can be repeated if necessary
             tic;
             tempOut=py.ivimnet.run(py.numpy.asarray(mean(dataVec./dataVec(:,1,:),3)),...
                 uint64(parsIVIMNET.batch_size),uint64(parsIVIMNET.iter_max)); %output order different, see below
@@ -178,7 +196,7 @@ if pythonFlag
             
         end
         params_IVIMNET_reps=cat(4,D_IVIMNET_reps,f_IVIMNET_reps,DStar_IVIMNET_reps);
-        params_IVIMNET_reps=permute(params_IVIMNET_reps,[1,2,4,3]);
+        params_IVIMNET_reps=permute(params_IVIMNET_reps,[1,2,4,3]); %re-ordering parameters
         params_IVIMNET=median(params_IVIMNET_reps,4);
         %parameters to plot
         params(:,(ny*(ifit-1))+1:ny*ifit,:)=params_IVIMNET(:,:,1:3);
@@ -306,7 +324,7 @@ timeAll(ifit)=0;
 %% Note on uncertainties for LSQ methods
 %The Bayesian inference function ivim_bayes can also be used to infer
 %uncertainties for the LSQ methods (segmented and non-sgemented) with the
-%corresponding parameter settings:
+%corresponding parameter settings (termed BFP in comments):
 %pars.nburnin(1); %short burn-in is suffcient
 %pars.nsamples=pars.nsamples(1); %few samples are sufficient
 %pars.priorChoice='uniform'; % the LSQ box-constraints correspond to a uniform /flat prior
