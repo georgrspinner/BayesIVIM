@@ -5,7 +5,7 @@ scenario='cancer'; %'stroke' %'in-vivo'
 %for simulation only
 if ~strcmp(scenario,'in-vivo')
     snr=40; %[10:10:50,75:25:200];
-    bval=[0,10,20,40,80,110,140,170,200,300,400,500,600,700,800,900];
+    bval=[0,10,20,40,80,110,140,170,200,300,400,500,600,700,800,900]; %Note that b-values are hard-coded in IVIMNET Python script, i.e. if they are adapted here, they also need to be modified in the Python script!
 end
 %
 %LSQ/Bayes fits
