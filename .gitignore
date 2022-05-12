@@ -1,4 +1,4 @@
 # List of untracked files to ignore
 #Folders
-**/__pycache__ #Python cache
+**code/ivimnet/__pycache__ #Python cache
 
