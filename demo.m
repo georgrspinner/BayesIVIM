@@ -103,7 +103,7 @@ nfit=7;
 params=zeros(nx,ny*nfit,3);
 %plot
 paramStr={'D','f','D*'};
-paramsCLims=cat(1,[0,2.5e-3],[0,0.25],[0,15e-3]);
+paramsCLims=cat(1,[0,2.5e-3],[0,0.25],[0,17.5e-3]);
 for p=1:3
     hFig{p}=figure('Name',paramStr{p});
     imagesc(params(:,:,p),paramsCLims(p,:)); 
